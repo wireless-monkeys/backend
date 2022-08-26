@@ -46,9 +46,8 @@ jobs:
       - name: Prepare image list
         id: images
         run: |
-          NEWNAME=${{ env.IMAGE_REPO }}
-          NEWTAG=${{ steps.build.outputs.imageid }}
-          IMAGES="[{\"environment\":\"prod\",\"target\": \"backend\",\"newName\":\"$NEWNAME\",\"newTag\":\"$NEWTAG\"}]"
+          NEWIMAGE=${{ env.IMAGE_REPO }}@${{ steps.build.outputs.imageid }}
+          IMAGES="[{\"environment\":\"prod\",\"target\": \"backend\",\"newImage\":\"$NEWIMAGE\"}]"
           echo "::set-output name=images::$(echo $IMAGES | base64 -w 0)"
 
       - name: Update images
