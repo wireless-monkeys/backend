@@ -32,6 +32,7 @@ jobs:
           images: ${{ env.IMAGE_REPO }}
 
       - name: Build and push to GitHub Packages
+        id: build
         uses: docker/build-push-action@v2
         with:
           context: .
@@ -41,3 +42,18 @@ jobs:
           cache-from: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache
           cache-to: type=registry,ref=${{ env.IMAGE_REPO }}:buildcache,mode=max
           push: true
+
+      - name: Prepare image list
+        id: images
+        run: |
+          NEWNAME=${{ env.IMAGE_REPO }}
+          NEWTAG=${{ steps.build.outputs.imageid }}
+          IMAGES="[{\"environment\":\"prod\",\"target\": \"backend\",\"newName\":\"$NEWNAME\",\"newTag\":\"$NEWTAG\"}]"
+          echo "::set-output images=$(echo $IMAGES | base64)"
+
+      - name: Update images
+        uses: benc-uk/workflow-dispatch@v1
+        with:
+          workflow: Update Images
+          token: ${{ secrets.DISPATCH_PAT }}
+          inputs: '{ "images": "${{ steps.images.output.images }}", "name": "Wireless Monkeys", "email": "112172550+wireless-monkeys-sa@users.noreply.github.com" }'
