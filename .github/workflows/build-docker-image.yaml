@@ -49,7 +49,7 @@ jobs:
           NEWNAME=${{ env.IMAGE_REPO }}
           NEWTAG=${{ steps.build.outputs.imageid }}
           IMAGES="[{\"environment\":\"prod\",\"target\": \"backend\",\"newName\":\"$NEWNAME\",\"newTag\":\"$NEWTAG\"}]"
-          echo "::set-output images=$(echo $IMAGES | base64)"
+          echo "::set-output name=images::$(echo $IMAGES | base64 -w 0)"
 
       - name: Update images
         uses: benc-uk/workflow-dispatch@v1
