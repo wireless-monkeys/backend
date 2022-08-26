@@ -55,5 +55,6 @@ jobs:
         uses: benc-uk/workflow-dispatch@v1
         with:
           workflow: Update Images
+          repo: wireless-monkeys/infrastructure
           token: ${{ secrets.DISPATCH_PAT }}
           inputs: '{ "images": "${{ steps.images.output.images }}", "name": "Wireless Monkeys", "email": "112172550+wireless-monkeys-sa@users.noreply.github.com" }'
