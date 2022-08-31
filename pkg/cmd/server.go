@@ -33,6 +33,9 @@ func RunServer() error {
 	helloService := service.NewHelloServiceServer()
 	api.RegisterHelloServiceServer(s, helloService)
 
+	edgeService := service.NewEdgeServiceServer()
+	api.RegisterEdgeServiceServer(s, edgeService)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 

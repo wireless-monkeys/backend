@@ -6,8 +6,6 @@ import (
 	api "github.com/wireless-monkeys/backend/pkg/api"
 )
 
-//go:generate protoc --go_out=../api --go_opt=paths=source_relative --go-grpc_out=../api --go-grpc_opt=paths=source_relative ../../proto/hello-service.proto --proto_path=../../proto
-
 type helloServiceServer struct {
 	api.UnimplementedHelloServiceServer
 }
