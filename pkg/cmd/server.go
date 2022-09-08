@@ -6,6 +6,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/wireless-monkeys/backend/pkg/api"
@@ -36,6 +37,10 @@ func RunServer() error {
 	edgeService := service.NewEdgeServiceServer()
 	api.RegisterEdgeServiceServer(s, edgeService)
 
+	qdbConfig := parseQdbEnv()
+	dashboardService := service.NewDashboardServiceServer(qdbConfig)
+	api.RegisterDashboardServiceServer(s, dashboardService)
+
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
 
@@ -50,4 +55,32 @@ func RunServer() error {
 		return errors.WithStack(err)
 	}
 	return nil
+}
+
+func getEnv(key, fallback string) string {
+	if value, ok := os.LookupEnv(key); ok {
+		return value
+	}
+	return fallback
+}
+
+func parseQdbEnv() *service.QdbConfig {
+	qdbHost := getEnv("QDB_HOST", "localhost")
+	qdbPort, err := strconv.Atoi(getEnv("QDB_PORT", "8812"))
+	if err != nil {
+		log.Fatal(err)
+	}
+	qdbUser := getEnv("QDB_USER", "admin")
+	qdbPassword := getEnv("QDB_PASSWORD", "quest")
+	qdbDbname := getEnv("QDB_DBNAME", "qdb")
+	qdbSslMode := getEnv("QDB_SSLMODE", "disable")
+
+	return &service.QdbConfig{
+		Host:     qdbHost,
+		Port:     qdbPort,
+		User:     qdbUser,
+		Password: qdbPassword,
+		Dbname:   qdbDbname,
+		SslMode:  qdbSslMode,
+	}
 }

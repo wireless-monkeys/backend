@@ -1,0 +1,24 @@
+syntax = "proto3";
+option go_package = "github.com/wireless-monkeys/backend/pkg/api";
+
+package api;
+
+import "google/protobuf/timestamp.proto";
+
+service DashboardService {
+    rpc GetNumberOfPeople (GetNumberOfPeopleRequest) returns (GetNumberOfPeopleResponse) {}
+}
+
+message GetNumberOfPeopleRequest {
+    google.protobuf.Timestamp start_time = 1;
+    google.protobuf.Timestamp end_time = 2;
+}
+
+message GetNumberOfPeopleResponse {
+    repeated NumberOfPeopleRow rows = 1;
+}
+
+message NumberOfPeopleRow {
+    google.protobuf.Timestamp timestamp = 1;
+    int64 number_of_people = 2;
+}
