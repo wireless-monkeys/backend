@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EdgeServiceClient interface {
 	Heartbeat(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Empty, error)
+	SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*Empty, error)
 }
 
 type edgeServiceClient struct {
@@ -42,11 +43,21 @@ func (c *edgeServiceClient) Heartbeat(ctx context.Context, in *Empty, opts ...gr
 	return out, nil
 }
 
+func (c *edgeServiceClient) SetData(ctx context.Context, in *SetDataRequest, opts ...grpc.CallOption) (*Empty, error) {
+	out := new(Empty)
+	err := c.cc.Invoke(ctx, "/api.EdgeService/SetData", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // EdgeServiceServer is the server API for EdgeService service.
 // All implementations must embed UnimplementedEdgeServiceServer
 // for forward compatibility
 type EdgeServiceServer interface {
 	Heartbeat(context.Context, *Empty) (*Empty, error)
+	SetData(context.Context, *SetDataRequest) (*Empty, error)
 	mustEmbedUnimplementedEdgeServiceServer()
 }
 
@@ -56,6 +67,9 @@ type UnimplementedEdgeServiceServer struct {
 
 func (UnimplementedEdgeServiceServer) Heartbeat(context.Context, *Empty) (*Empty, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Heartbeat not implemented")
+}
+func (UnimplementedEdgeServiceServer) SetData(context.Context, *SetDataRequest) (*Empty, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method SetData not implemented")
 }
 func (UnimplementedEdgeServiceServer) mustEmbedUnimplementedEdgeServiceServer() {}
 
@@ -88,6 +102,24 @@ func _EdgeService_Heartbeat_Handler(srv interface{}, ctx context.Context, dec fu
 	return interceptor(ctx, in, info, handler)
 }
 
+func _EdgeService_SetData_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SetDataRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(EdgeServiceServer).SetData(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/api.EdgeService/SetData",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(EdgeServiceServer).SetData(ctx, req.(*SetDataRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // EdgeService_ServiceDesc is the grpc.ServiceDesc for EdgeService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -98,6 +130,10 @@ var EdgeService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "Heartbeat",
 			Handler:    _EdgeService_Heartbeat_Handler,
+		},
+		{
+			MethodName: "SetData",
+			Handler:    _EdgeService_SetData_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

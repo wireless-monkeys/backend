@@ -4,9 +4,11 @@ option go_package = "github.com/wireless-monkeys/backend/pkg/api";
 package api;
 
 import "google/protobuf/timestamp.proto";
+import "utils.proto";
 
 service DashboardService {
     rpc GetNumberOfPeople (GetNumberOfPeopleRequest) returns (GetNumberOfPeopleResponse) {}
+    rpc SubscribeCamera (Empty) returns (stream CameraResponse) {}
 }
 
 message GetNumberOfPeopleRequest {
@@ -21,4 +23,9 @@ message GetNumberOfPeopleResponse {
 message NumberOfPeopleRow {
     google.protobuf.Timestamp timestamp = 1;
     int64 number_of_people = 2;
+}
+
+message CameraResponse {
+    google.protobuf.Timestamp timestamp = 1;
+    bytes image = 2;
 }

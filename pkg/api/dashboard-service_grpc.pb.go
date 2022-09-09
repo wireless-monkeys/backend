@@ -23,6 +23,7 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type DashboardServiceClient interface {
 	GetNumberOfPeople(ctx context.Context, in *GetNumberOfPeopleRequest, opts ...grpc.CallOption) (*GetNumberOfPeopleResponse, error)
+	SubscribeCamera(ctx context.Context, in *Empty, opts ...grpc.CallOption) (DashboardService_SubscribeCameraClient, error)
 }
 
 type dashboardServiceClient struct {
@@ -42,11 +43,44 @@ func (c *dashboardServiceClient) GetNumberOfPeople(ctx context.Context, in *GetN
 	return out, nil
 }
 
+func (c *dashboardServiceClient) SubscribeCamera(ctx context.Context, in *Empty, opts ...grpc.CallOption) (DashboardService_SubscribeCameraClient, error) {
+	stream, err := c.cc.NewStream(ctx, &DashboardService_ServiceDesc.Streams[0], "/api.DashboardService/SubscribeCamera", opts...)
+	if err != nil {
+		return nil, err
+	}
+	x := &dashboardServiceSubscribeCameraClient{stream}
+	if err := x.ClientStream.SendMsg(in); err != nil {
+		return nil, err
+	}
+	if err := x.ClientStream.CloseSend(); err != nil {
+		return nil, err
+	}
+	return x, nil
+}
+
+type DashboardService_SubscribeCameraClient interface {
+	Recv() (*CameraResponse, error)
+	grpc.ClientStream
+}
+
+type dashboardServiceSubscribeCameraClient struct {
+	grpc.ClientStream
+}
+
+func (x *dashboardServiceSubscribeCameraClient) Recv() (*CameraResponse, error) {
+	m := new(CameraResponse)
+	if err := x.ClientStream.RecvMsg(m); err != nil {
+		return nil, err
+	}
+	return m, nil
+}
+
 // DashboardServiceServer is the server API for DashboardService service.
 // All implementations must embed UnimplementedDashboardServiceServer
 // for forward compatibility
 type DashboardServiceServer interface {
 	GetNumberOfPeople(context.Context, *GetNumberOfPeopleRequest) (*GetNumberOfPeopleResponse, error)
+	SubscribeCamera(*Empty, DashboardService_SubscribeCameraServer) error
 	mustEmbedUnimplementedDashboardServiceServer()
 }
 
@@ -56,6 +90,9 @@ type UnimplementedDashboardServiceServer struct {
 
 func (UnimplementedDashboardServiceServer) GetNumberOfPeople(context.Context, *GetNumberOfPeopleRequest) (*GetNumberOfPeopleResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetNumberOfPeople not implemented")
+}
+func (UnimplementedDashboardServiceServer) SubscribeCamera(*Empty, DashboardService_SubscribeCameraServer) error {
+	return status.Errorf(codes.Unimplemented, "method SubscribeCamera not implemented")
 }
 func (UnimplementedDashboardServiceServer) mustEmbedUnimplementedDashboardServiceServer() {}
 
@@ -88,6 +125,27 @@ func _DashboardService_GetNumberOfPeople_Handler(srv interface{}, ctx context.Co
 	return interceptor(ctx, in, info, handler)
 }
 
+func _DashboardService_SubscribeCamera_Handler(srv interface{}, stream grpc.ServerStream) error {
+	m := new(Empty)
+	if err := stream.RecvMsg(m); err != nil {
+		return err
+	}
+	return srv.(DashboardServiceServer).SubscribeCamera(m, &dashboardServiceSubscribeCameraServer{stream})
+}
+
+type DashboardService_SubscribeCameraServer interface {
+	Send(*CameraResponse) error
+	grpc.ServerStream
+}
+
+type dashboardServiceSubscribeCameraServer struct {
+	grpc.ServerStream
+}
+
+func (x *dashboardServiceSubscribeCameraServer) Send(m *CameraResponse) error {
+	return x.ServerStream.SendMsg(m)
+}
+
 // DashboardService_ServiceDesc is the grpc.ServiceDesc for DashboardService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -100,6 +158,12 @@ var DashboardService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _DashboardService_GetNumberOfPeople_Handler,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
+	Streams: []grpc.StreamDesc{
+		{
+			StreamName:    "SubscribeCamera",
+			Handler:       _DashboardService_SubscribeCamera_Handler,
+			ServerStreams: true,
+		},
+	},
 	Metadata: "dashboard-service.proto",
 }
