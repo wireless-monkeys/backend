@@ -1,7 +1,14 @@
 package main
 
-import "github.com/wireless-monkeys/backend/pkg/cmd"
+import (
+	"log"
+
+	"github.com/wireless-monkeys/backend/pkg/cmd"
+)
 
 func main() {
-	cmd.RunServer()
+	err := cmd.RunServer()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
