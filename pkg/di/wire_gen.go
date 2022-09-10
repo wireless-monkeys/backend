@@ -9,19 +9,17 @@ package di
 import (
 	"github.com/asaskevich/EventBus"
 	"github.com/wireless-monkeys/backend/pkg/api"
+	"github.com/wireless-monkeys/backend/pkg/config"
 	"github.com/wireless-monkeys/backend/pkg/service"
 	"google.golang.org/grpc"
-	"log"
-	"os"
-	"strconv"
 )
 
 // Injectors from wire.go:
 
 func InitializeServer() *grpc.Server {
-	qdbConfig := parseQdbEnv()
+	configConfig := config.NewConfig()
 	bus := EventBus.New()
-	dashboardServiceServer := service.NewDashboardServiceServer(qdbConfig, bus)
+	dashboardServiceServer := service.NewDashboardServiceServer(configConfig, bus)
 	edgeServiceServer := service.NewEdgeServiceServer(bus)
 	helloServiceServer := service.NewHelloServiceServer()
 	server := provideGrpcServer(dashboardServiceServer, edgeServiceServer, helloServiceServer)
@@ -40,32 +38,4 @@ func provideGrpcServer(
 	api.RegisterEdgeServiceServer(s, edgeService)
 	api.RegisterHelloServiceServer(s, helloService)
 	return s
-}
-
-func parseQdbEnv() *service.QdbConfig {
-	qdbHost := getEnv("QDB_HOST", "localhost")
-	qdbPort, err := strconv.Atoi(getEnv("QDB_PORT", "8812"))
-	if err != nil {
-		log.Fatal(err)
-	}
-	qdbUser := getEnv("QDB_USER", "admin")
-	qdbPassword := getEnv("QDB_PASSWORD", "quest")
-	qdbDbname := getEnv("QDB_DBNAME", "qdb")
-	qdbSslMode := getEnv("QDB_SSLMODE", "disable")
-
-	return &service.QdbConfig{
-		Host:     qdbHost,
-		Port:     qdbPort,
-		User:     qdbUser,
-		Password: qdbPassword,
-		Dbname:   qdbDbname,
-		SslMode:  qdbSslMode,
-	}
-}
-
-func getEnv(key, fallback string) string {
-	if value, ok := os.LookupEnv(key); ok {
-		return value
-	}
-	return fallback
 }

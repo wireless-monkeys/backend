@@ -9,27 +9,19 @@ import (
 	"github.com/asaskevich/EventBus"
 	_ "github.com/lib/pq"
 	api "github.com/wireless-monkeys/backend/pkg/api"
+	"github.com/wireless-monkeys/backend/pkg/config"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
 type dashboardServiceServer struct {
 	api.UnimplementedDashboardServiceServer
-	config *QdbConfig
+	config *config.QdbConfig
 	bus    EventBus.Bus
 }
 
-type QdbConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Dbname   string
-	SslMode  string
-}
-
-func NewDashboardServiceServer(qdbConfig *QdbConfig, bus EventBus.Bus) api.DashboardServiceServer {
+func NewDashboardServiceServer(config *config.Config, bus EventBus.Bus) api.DashboardServiceServer {
 	return &dashboardServiceServer{
-		config: qdbConfig,
+		config: config.QdbConfig,
 		bus:    bus,
 	}
 }

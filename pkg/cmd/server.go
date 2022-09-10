@@ -8,20 +8,14 @@ import (
 	"os/signal"
 
 	"github.com/pkg/errors"
+	"github.com/wireless-monkeys/backend/pkg/config"
 	"github.com/wireless-monkeys/backend/pkg/di"
 )
 
-type Config struct {
-	Port int
-}
-
 func RunServer() error {
-	// TODO: load config from env
-	cfg := Config{
-		Port: 4000,
-	}
+	cfg := config.NewConfig()
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", *&cfg.Port))
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", cfg.Port))
 	if err != nil {
 		return errors.WithStack(err)
 	}
