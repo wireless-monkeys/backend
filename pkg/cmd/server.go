@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"strconv"
 
+	"github.com/asaskevich/EventBus"
 	"github.com/pkg/errors"
 	"github.com/wireless-monkeys/backend/pkg/api"
 	"github.com/wireless-monkeys/backend/pkg/service"
@@ -29,16 +30,18 @@ func RunServer() error {
 		return errors.WithStack(err)
 	}
 
+	bus := EventBus.New()
+
 	s := grpc.NewServer()
 
 	helloService := service.NewHelloServiceServer()
 	api.RegisterHelloServiceServer(s, helloService)
 
-	edgeService := service.NewEdgeServiceServer()
+	edgeService := service.NewEdgeServiceServer(bus)
 	api.RegisterEdgeServiceServer(s, edgeService)
 
 	qdbConfig := parseQdbEnv()
-	dashboardService := service.NewDashboardServiceServer(qdbConfig)
+	dashboardService := service.NewDashboardServiceServer(qdbConfig, bus)
 	api.RegisterDashboardServiceServer(s, dashboardService)
 
 	c := make(chan os.Signal, 1)
@@ -47,7 +50,7 @@ func RunServer() error {
 	go func() {
 		<-c
 		log.Printf("stopping...")
-		s.GracefulStop()
+		s.Stop()
 	}()
 
 	log.Printf("server listening at %v", lis.Addr())

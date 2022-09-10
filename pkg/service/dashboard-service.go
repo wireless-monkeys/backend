@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/asaskevich/EventBus"
 	_ "github.com/lib/pq"
 	api "github.com/wireless-monkeys/backend/pkg/api"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -14,6 +15,7 @@ import (
 type dashboardServiceServer struct {
 	api.UnimplementedDashboardServiceServer
 	config *QdbConfig
+	bus    EventBus.Bus
 }
 
 type QdbConfig struct {
@@ -25,9 +27,10 @@ type QdbConfig struct {
 	SslMode  string
 }
 
-func NewDashboardServiceServer(qdbConfig *QdbConfig) api.DashboardServiceServer {
+func NewDashboardServiceServer(qdbConfig *QdbConfig, bus EventBus.Bus) api.DashboardServiceServer {
 	return &dashboardServiceServer{
 		config: qdbConfig,
+		bus:    bus,
 	}
 }
 
@@ -75,4 +78,18 @@ func (s *dashboardServiceServer) GetNumberOfPeople(ctx context.Context, in *api.
 	return &api.GetNumberOfPeopleResponse{
 		Rows: people,
 	}, nil
+}
+
+func (s *dashboardServiceServer) SubscribeCamera(empty *api.Empty, stream api.DashboardService_SubscribeCameraServer) error {
+	handler := func(event interface{}) {
+		in := event.(*api.SetDataRequest)
+		stream.Send(&api.CameraResponse{
+			Timestamp: in.Timestamp,
+			Image:     in.CameraImage,
+		})
+	}
+	s.bus.Subscribe("edge:setdata", handler)
+	defer s.bus.Unsubscribe("edge:setdata", handler)
+	<-stream.Context().Done()
+	return stream.Context().Err()
 }

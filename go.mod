@@ -9,6 +9,7 @@ require (
 )
 
 require (
+	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
 	github.com/lib/pq v1.10.7 // indirect
 	github.com/questdb/go-questdb-client v0.0.0-20220830141437-b761335d8cc0 // indirect
