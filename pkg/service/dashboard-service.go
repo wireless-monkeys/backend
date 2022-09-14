@@ -32,8 +32,8 @@ var queryTemplate = `
 from(bucket: "people_count")
  |> range(start: %v, stop: %v)
  |> filter(fn: (r) => r["_measurement"] == "people_count")
- |> aggregateWindow(every: %vm, fn: last, createEmpty: false)
- |> yield(name: "last")
+ |> aggregateWindow(every: %vm, fn: max, createEmpty: false)
+ |> yield(name: "max")
 `
 
 func (s *dashboardServiceServer) GetNumberOfPeople(ctx context.Context, in *api.GetNumberOfPeopleRequest) (*api.GetNumberOfPeopleResponse, error) {
