@@ -10,6 +10,7 @@ import (
 	api "github.com/wireless-monkeys/backend/pkg/api"
 	"github.com/wireless-monkeys/backend/pkg/config"
 	"google.golang.org/protobuf/types/known/timestamppb"
+	"log"
 )
 
 type dashboardServiceServer struct {
@@ -31,12 +32,22 @@ var queryTemplate = `
 from(bucket: "people_count")
  |> range(start: %v, stop: %v)
  |> filter(fn: (r) => r["_measurement"] == "people_count")
- |> aggregateWindow(every: 1m, fn: last, createEmpty: false)
+ |> aggregateWindow(every: %vm, fn: last, createEmpty: false)
  |> yield(name: "last")
 `
 
 func (s *dashboardServiceServer) GetNumberOfPeople(ctx context.Context, in *api.GetNumberOfPeopleRequest) (*api.GetNumberOfPeopleResponse, error) {
-	query := fmt.Sprintf(queryTemplate, in.GetStartTime().AsTime().Unix(), in.GetEndTime().AsTime().Unix())
+	intervalMinutes := in.GetIntervalMinutes()
+	if intervalMinutes <= 0 {
+		intervalMinutes = 1
+	}
+	query := fmt.Sprintf(
+		queryTemplate,
+		in.GetStartTime().GetSeconds(),
+		in.GetEndTime().GetSeconds(),
+		intervalMinutes,
+	)
+	log.Println(query)
 	result, err := s.queryAPI.Query(context.Background(), query)
 	if err != nil {
 		return nil, errors.WithStack(err)
