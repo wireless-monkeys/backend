@@ -8,7 +8,12 @@ require (
 	google.golang.org/protobuf v1.28.0
 )
 
-require github.com/google/go-cmp v0.5.8 // indirect
+require (
+	github.com/deepmap/oapi-codegen v1.8.2 // indirect
+	github.com/google/go-cmp v0.5.8 // indirect
+	github.com/influxdata/influxdb-client-go/v2 v2.10.0 // indirect
+	github.com/influxdata/line-protocol v0.0.0-20200327222509-2487e7298839 // indirect
+)
 
 require (
 	github.com/asaskevich/EventBus v0.0.0-20200907212545-49d423059eef // indirect
@@ -21,7 +26,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.0.5 // indirect
-	github.com/questdb/go-questdb-client v0.0.0-20220830141437-b761335d8cc0 // indirect
+	github.com/questdb/go-questdb-client v0.0.0-20220912094445-fa4d7bd7b59e // indirect
 	github.com/spf13/afero v1.8.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect

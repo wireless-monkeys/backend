@@ -10,16 +10,25 @@ import (
 type Config struct {
 	Port int
 
-	QdbConfig *QdbConfig `mapstructure:"qdb"`
+	QdbConfig      *QdbConfig      `mapstructure:"qdb"`
+	InfluxDBConfig *InfluxDBConfig `mapstructure:"influxdb"`
 }
 
 type QdbConfig struct {
-	Host     string
-	Port     int
-	User     string
-	Password string
-	Dbname   string
-	SslMode  string
+	Host       string
+	Port       int
+	InfluxPort int
+	User       string
+	Password   string
+	Dbname     string
+	SslMode    string
+}
+
+type InfluxDBConfig struct {
+	Host         string
+	Token        string
+	Organization string
+	Bucket       string
 }
 
 var config = Config{}
@@ -38,9 +47,16 @@ func parseConfig() {
 	viper.SetDefault("qdb.password", "quest")
 	viper.SetDefault("qdb.dbname", "qdb")
 	viper.SetDefault("qdb.sslMode", "disable")
+	viper.SetDefault("influxdb.host", "http://localhost:8086")
+	viper.SetDefault("influxdb.token", "")
+	viper.SetDefault("influxdb.organization", "wireless-monkeys")
+	viper.SetDefault("influxdb.bucket", "people_count")
 
 	viper.SetEnvKeyReplacer(strings.NewReplacer(".", "_"))
 	viper.AutomaticEnv()
+	viper.SetConfigName("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath(".")
 	viper.ReadInConfig()
 	viper.Unmarshal(&config)
 }

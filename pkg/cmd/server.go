@@ -20,7 +20,10 @@ func RunServer() error {
 		return errors.WithStack(err)
 	}
 
-	s := di.InitializeServer()
+	s, err := di.InitializeServer()
+	if err != nil {
+		return errors.WithStack(err)
+	}
 
 	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt)
