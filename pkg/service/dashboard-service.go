@@ -2,12 +2,11 @@ package service
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
-	"time"
-
 	"github.com/asaskevich/EventBus"
+	api2 "github.com/influxdata/influxdb-client-go/v2/api"
 	_ "github.com/lib/pq"
+	"github.com/pkg/errors"
 	api "github.com/wireless-monkeys/backend/pkg/api"
 	"github.com/wireless-monkeys/backend/pkg/config"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -15,60 +14,48 @@ import (
 
 type dashboardServiceServer struct {
 	api.UnimplementedDashboardServiceServer
-	config *config.QdbConfig
-	bus    EventBus.Bus
+	config   *config.QdbConfig
+	bus      EventBus.Bus
+	queryAPI api2.QueryAPI
 }
 
-func NewDashboardServiceServer(config *config.Config, bus EventBus.Bus) api.DashboardServiceServer {
+func NewDashboardServiceServer(config *config.Config, bus EventBus.Bus, queryAPI api2.QueryAPI) api.DashboardServiceServer {
 	return &dashboardServiceServer{
-		config: config.QdbConfig,
-		bus:    bus,
+		config:   config.QdbConfig,
+		bus:      bus,
+		queryAPI: queryAPI,
 	}
 }
+
+var queryTemplate = `
+from(bucket: "people_count")
+ |> range(start: %v, stop: %v)
+ |> filter(fn: (r) => r["_measurement"] == "people_count")
+ |> aggregateWindow(every: 1m, fn: last, createEmpty: false)
+ |> yield(name: "last")
+`
 
 func (s *dashboardServiceServer) GetNumberOfPeople(ctx context.Context, in *api.GetNumberOfPeopleRequest) (*api.GetNumberOfPeopleResponse, error) {
-	connStr := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=%s",
-		s.config.Host, s.config.Port, s.config.User, s.config.Password, s.config.Dbname, s.config.SslMode)
-	db, err := sql.Open("postgres", connStr)
+	query := fmt.Sprintf(queryTemplate, in.GetStartTime().AsTime().Unix(), in.GetEndTime().AsTime().Unix())
+	result, err := s.queryAPI.Query(context.Background(), query)
 	if err != nil {
-		return nil, err
+		return nil, errors.WithStack(err)
 	}
-	defer db.Close()
-
-	sqlTimeFormat := "2006-01-02 15:04:05"
-	query := fmt.Sprintf("SELECT timestamp, number_of_people FROM people WHERE timestamp >= '%s' AND timestamp <= '%s';",
-		in.StartTime.AsTime().Format(sqlTimeFormat), in.EndTime.AsTime().Format(sqlTimeFormat))
-	fmt.Print(query)
-	rows, err := db.Query(query)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	people := make([]*api.NumberOfPeopleRow, 0)
-
-	for rows.Next() {
-		var timestamp time.Time
-		var number_of_people int64
-		err = rows.Scan(&timestamp, &number_of_people)
-		if err != nil {
-			return nil, err
+	var rows []*api.NumberOfPeopleRow
+	for result.Next() {
+		for result.Next() {
+			rows = append(rows, &api.NumberOfPeopleRow{
+				NumberOfPeople: result.Record().Value().(int64),
+				Timestamp:      timestamppb.New(result.Record().Time()),
+			})
 		}
-		row := &api.NumberOfPeopleRow{
-			Timestamp:      timestamppb.New(timestamp),
-			NumberOfPeople: number_of_people,
+		if result.Err() != nil {
+			return nil, errors.WithStack(err)
 		}
-		people = append(people, row)
-	}
-
-	err = rows.Err()
-	if err != nil {
-		return nil, err
 	}
 
 	return &api.GetNumberOfPeopleResponse{
-		Rows: people,
+		Rows: rows,
 	}, nil
 }
 

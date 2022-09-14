@@ -21,8 +21,10 @@ import (
 func InitializeServer() (*grpc.Server, error) {
 	configConfig := config.NewConfig()
 	bus := EventBus.New()
-	dashboardServiceServer := service.NewDashboardServiceServer(configConfig, bus)
-	writeAPIBlocking := provideInfluxWriteAPI(configConfig)
+	client := provideInfluxClient(configConfig)
+	queryAPI := provideInfluxQueryAPI(configConfig, client)
+	dashboardServiceServer := service.NewDashboardServiceServer(configConfig, bus, queryAPI)
+	writeAPIBlocking := provideInfluxWriteAPI(configConfig, client)
 	edgeServiceServer := service.NewEdgeServiceServer(bus, writeAPIBlocking)
 	helloServiceServer := service.NewHelloServiceServer()
 	server := provideGrpcServer(dashboardServiceServer, edgeServiceServer, helloServiceServer)
@@ -43,9 +45,19 @@ func provideGrpcServer(
 	return s
 }
 
-func provideInfluxWriteAPI(cfg *config.Config) api2.WriteAPIBlocking {
+func provideInfluxClient(cfg *config.Config) influxdb2.Client {
 	influxConfig := cfg.InfluxDBConfig
 	client := influxdb2.NewClient(influxConfig.Host, influxConfig.Token)
+	return client
+}
+
+func provideInfluxWriteAPI(cfg *config.Config, client influxdb2.Client) api2.WriteAPIBlocking {
+	influxConfig := cfg.InfluxDBConfig
 	writeAPI := client.WriteAPIBlocking(influxConfig.Organization, influxConfig.Bucket)
 	return writeAPI
+}
+
+func provideInfluxQueryAPI(cfg *config.Config, client influxdb2.Client) api2.QueryAPI {
+	queryAPI := client.QueryAPI(cfg.InfluxDBConfig.Organization)
+	return queryAPI
 }
