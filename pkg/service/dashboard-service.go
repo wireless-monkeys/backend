@@ -79,6 +79,7 @@ func (s *dashboardServiceServer) SubscribeCamera(empty *api.Empty, stream api.Da
 			Image:     cameraStore.CurrentCameraImage,
 		})
 	}
+	handler(0)
 	s.bus.Subscribe("edge:setdata", handler)
 	defer s.bus.Unsubscribe("edge:setdata", handler)
 	<-stream.Context().Done()
