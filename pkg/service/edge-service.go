@@ -7,6 +7,7 @@ import (
 	api2 "github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/pkg/errors"
 	"github.com/wireless-monkeys/backend/pkg/api"
+	"github.com/wireless-monkeys/backend/pkg/store"
 )
 
 type edgeServiceServer struct {
@@ -28,7 +29,9 @@ func (s *edgeServiceServer) Heartbeat(ctx context.Context, in *api.Empty) (*api.
 }
 
 func (s *edgeServiceServer) SetData(ctx context.Context, in *api.SetDataRequest) (*api.Empty, error) {
-	s.bus.Publish("edge:setdata", in)
+	store.CameraStoreInstance.Timestamp = in.Timestamp.AsTime()
+	store.CameraStoreInstance.CurrentCameraImage = in.CameraImage
+	s.bus.Publish("edge:setdata", 0)
 	p := influxdb2.NewPointWithMeasurement("people_count").
 		AddField("count", in.NumberOfPeople).
 		SetTime(in.GetTimestamp().AsTime())

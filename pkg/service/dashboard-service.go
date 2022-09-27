@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	api "github.com/wireless-monkeys/backend/pkg/api"
 	"github.com/wireless-monkeys/backend/pkg/config"
+	"github.com/wireless-monkeys/backend/pkg/store"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"log"
 )
@@ -72,10 +73,10 @@ func (s *dashboardServiceServer) GetNumberOfPeople(ctx context.Context, in *api.
 
 func (s *dashboardServiceServer) SubscribeCamera(empty *api.Empty, stream api.DashboardService_SubscribeCameraServer) error {
 	handler := func(event interface{}) {
-		in := event.(*api.SetDataRequest)
+		cameraStore := store.CameraStoreInstance
 		stream.Send(&api.CameraResponse{
-			Timestamp: in.Timestamp,
-			Image:     in.CameraImage,
+			Timestamp: timestamppb.New(cameraStore.Timestamp),
+			Image:     cameraStore.CurrentCameraImage,
 		})
 	}
 	s.bus.Subscribe("edge:setdata", handler)
