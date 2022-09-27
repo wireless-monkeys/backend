@@ -12,6 +12,7 @@ import (
 	"github.com/wireless-monkeys/backend/pkg/config"
 	"github.com/wireless-monkeys/backend/pkg/service"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
 )
 
 func InitializeServer() (*grpc.Server, error) {
@@ -38,6 +39,7 @@ func provideGrpcServer(
 	api.RegisterDashboardServiceServer(s, dashboardService)
 	api.RegisterEdgeServiceServer(s, edgeService)
 	api.RegisterHelloServiceServer(s, helloService)
+	reflection.Register(s)
 	return s
 }
 
