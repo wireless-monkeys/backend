@@ -75,8 +75,9 @@ func (s *dashboardServiceServer) SubscribeCamera(empty *api.Empty, stream api.Da
 	handler := func(event interface{}) {
 		cameraStore := store.CameraStoreInstance
 		stream.Send(&api.CameraResponse{
-			Timestamp: timestamppb.New(cameraStore.Timestamp),
-			Image:     cameraStore.CurrentCameraImage,
+			Timestamp:      timestamppb.New(cameraStore.Timestamp),
+			Image:          cameraStore.CurrentCameraImage,
+			NumberOfPeople: cameraStore.NumberOfPeople,
 		})
 	}
 	handler(0)

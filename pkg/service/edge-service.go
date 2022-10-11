@@ -31,6 +31,7 @@ func (s *edgeServiceServer) Heartbeat(ctx context.Context, in *api.Empty) (*api.
 func (s *edgeServiceServer) SetData(ctx context.Context, in *api.SetDataRequest) (*api.Empty, error) {
 	store.CameraStoreInstance.Timestamp = in.Timestamp.AsTime()
 	store.CameraStoreInstance.CurrentCameraImage = in.CameraImage
+	store.CameraStoreInstance.NumberOfPeople = in.NumberOfPeople
 	s.bus.Publish("edge:setdata", 0)
 	p := influxdb2.NewPointWithMeasurement("people_count").
 		AddField("count", in.NumberOfPeople).
